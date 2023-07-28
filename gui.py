@@ -1,117 +1,150 @@
 import streamlit as st
-# from streamlit_session_state import session_state
 import os
 import tempfile
 from PIL import Image
-from scoring_system import reference_sheet, student_sheet,score
+import base64
+from scoring_system import reference_sheet, student_sheet, score
 
+im = Image.open(r"C:\Users\Sam\Desktop\project\ocr_code\Automatic-test-scoring-system\assets\favicon.ico")
 st.set_page_config(
     page_title="Test Scoring System",
-    page_icon=":writing hand:",
+    page_icon=im,
     layout="wide"
+)
+# Add a custom image as the background using CSS
+background_image_url = 'https://images.app.goo.gl/LFCobouKtT7oZ7Qv7'  # Replace 'path_to_your_custom_image.jpg' with the path to your image
+st.markdown(
+    f"""
+    <style>
+    .reportview-container {{
+        background: url('{background_image_url}') no-repeat center center fixed;
+        background-size: cover;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 
-# Outputs: value
-# Define a function to get the session state
-def get_session_state():
-    return st.session_state
+@st.cache(allow_output_mutation=True)
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
+def set_png_as_page_bg(png_file):
+    bin_str = get_base64_of_bin_file(png_file)
+    page_bg_img = '''
+    <style>
+    body {
+    background-image: url("data:image/png;base64,%s");
+    background-size: cover;
+    }
+    </style>
+    ''' % bin_str
+    
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+    return
 
-st.write("# Automatic Test Scoring System 👋")
+set_png_as_page_bg(r'https://images.app.goo.gl/LFCobouKtT7oZ7Qv7')
+
+# Center the heading
+# Center the heading text using HTML and CSS
+st.markdown(
+    """
+    <div style="display: flex; justify-content: center;">
+        <h1>Automatic Test Scoring System ✍️</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# Center the other text as well
+st.markdown(
+    """
+    <div style="display: flex; justify-content: center;">
+        <p style="text-align: center; font-size: 24px;">
+             Hello! Welcome👋
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown(
     """
-    ### "Can an AI win Ghana’s National Science and Maths Quiz?". 
-    
-    This is the question posed by the NSMQ AI Grand Challenge 
-    which is an AI Grand Challenge for Education using Ghana’s National 
-    Science and Maths Quiz competition (NSMQ) as a case study. 
-    
-    The goal of nsmqai is build an AI to compete live in the NSMQ competition 
-    and win — performing better than the best contestants in all rounds and stages of the competition.
-
-    **👈 Select a demo from the dropdown on the left** to see some examples
-    of what NSMQ AI can do!
-    """
+    <div style="display: flex; justify-content: center;">
+        <p style="text-align: center; font-size: 24px;">
+            This is an automatic test test scoring system developed by students of KNUST.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
-@st.cache
-def load_image(image_path):
-    # Load the image from disk or compute it
-    reference_image = Image.open(image_path)
-    return reference_image
+
+st.markdown(
+    """
+    <div style="display: flex; justify-content: center;">
+        <p style="text-align: center; font-size: 20px; font-weight: bold;">
+            Ready to scan your answer sheets? Let's dive in
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# st.markdown(
+#     """
+#     ### "Hello! Welcome👋". 
+    
+#     This is an automatic test test scoring system developed by students of KNUST.
+
+#     **Ready to scan your answer sheets? Let's dive in**
+#     """
+# )
 
 # Add a button to upload the reference sheet
-uploaded_reference = st.file_uploader("Upload Reference Sheet", type=["jpg", "png", "jpeg"])
+uploaded_reference = st.file_uploader("Upload Reference Sheet ('.jpg', '.png', '.jpeg')", type=["jpg", "png", "jpeg"], key="reference")
 
 # Add a button to upload the student sheet
+uploaded_student = st.file_uploader("Upload Student Sheet ('.jpg', '.png', '.jpeg')", accept_multiple_files=True, key="student")
 
-uploaded_student = st.file_uploader("Upload Student Sheet", accept_multiple_files=True)
+# Process the reference and student sheets if uploaded
+if uploaded_reference and uploaded_student and st.button("Process Sheets"):
+    all_results = []
 
-if uploaded_reference and st.button("Process Reference Sheet"):
-    # Save the uploaded reference sheet temporarily
     with tempfile.NamedTemporaryFile(delete=False) as temp_ref:
         temp_ref.write(uploaded_reference.read())
         reference_path = temp_ref.name
 
-    # reference_image = Image.open(uploaded_reference)
-    # st.image(reference_image, caption='Reference Sheet', use_column_width=True)
     reference_answers = reference_sheet(reference_path)
     st.session_state['reference_answers'] = reference_answers
-    # st.write("Reference Sheet Answers:", reference_answers)
-
-    # Remove the temporary file after processing
     os.remove(reference_path)
 
-elif 'reference_answers' in st.session_state:
-    reference_answers = st.session_state['reference_answers']
-    # st.write("Reference Sheet Answers:", reference_answers)
-
-
-
-
-
-if uploaded_student and st.button("Process Student Sheet"):
-    all_results = []
-    # reference_image_paths = []  # List to store all processed reference images
-
-    for file in uploaded_student:
-        # Save the uploaded student sheet temporarily
+    for student_file in uploaded_student:
         with tempfile.NamedTemporaryFile(delete=False) as temp_student:
-            temp_student.write(file.read())
+            temp_student.write(student_file.read())
             student_path = temp_student.name
 
-        # student_image = Image.open(file)
-        # st.image(student_image, caption='Student Sheet', use_column_width=True)
         index_numbers, student_answers, reference_image, answer_contours = student_sheet(student_path)
-        # all_results.append({"index_numbers": index_numbers, "student_answers": student_answers, "answer_contours": answer_contours})
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg",delete=False) as temp_ref:
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_ref:
             reference_image.save(temp_ref.name)
-            all_results.append({"index_numbers": index_numbers, "student_answers": student_answers, "answer_contours": answer_contours,"image_paths":temp_ref.name})
-            # reference_image_paths.append(temp_ref.name)
-            
+            all_results.append({"index_numbers": index_numbers, "student_answers": student_answers, "answer_contours": answer_contours, "image_paths": temp_ref.name})
 
-        # Remove the temporary file after processing
         os.remove(student_path)
 
-    # Store the values in session state after processing all student sheets
-    # st.session_state['reference_image_paths'] = reference_image_paths  
     st.session_state['all_results'] = all_results
 
-
-# Check if 'reference' exists in st.session_state
+# Check if 'all_results' exists in st.session_state
 if 'all_results' in st.session_state:
-    # Retrieve the value of 'reference' from st.session_state
     all_results = st.session_state['all_results']
+    reference_answers=st.session_state['reference_answers'] 
 
-    # Call the function and pass the data as arguments
     if st.button('Grade'):
         df = score(reference_answers, all_results)
 
         # Display the results DataFrame
         st.dataframe(df)
 else:
-    # 'reference' is not yet defined, display a message or perform a specific action
-    st.write("Please upload and process the student sheet first.")
-
+    st.write("Please upload and process the reference and student sheets first.")
