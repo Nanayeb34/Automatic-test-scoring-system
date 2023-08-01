@@ -6,10 +6,11 @@ import base64
 import pyarrow as pa
 from scoring_system import reference_sheet, student_sheet, score
 
-im = Image.open(r"C:\Users\Sam\Desktop\project\ocr_code\Automatic-test-scoring-system\assets\black_favicon.ico")
+favicon_path = os.path.join(os.getcwd(),'assets','black_favicon.ico')
+favicon=Image.open(favicon_path)
 st.set_page_config(
     page_title="Test Scoring System",
-    page_icon=im,
+    page_icon=favicon,
     layout="wide"
 )
 # Add a custom image as the background using CSS
@@ -27,9 +28,6 @@ st.set_page_config(
 # )
 
 
-
-
-# Center the heading
 # Center the heading text using HTML and CSS
 st.markdown(
     """
@@ -51,29 +49,22 @@ st.markdown(
             Ready to scan your answer sheets? Let's dive in
         </p>
     </div>
+    Instructions\n
+    1. Upload Reference OMR sheet\n
+    2. Upload folder containing student OMR sheets\n
+    3. Click on 'Process sheets'\n
+    4. View results afterwards\n
     """,
     unsafe_allow_html=True
 )
 
-# st.markdown(
-#     """
-#     <style>
-#     /* Add custom styles to the "Process Sheets" button */
-#     .stButton button {
-#         border: 2px solid green !important;
-#         color: green !important;
-#     }
-#     </style>
-#     """,
-#     unsafe_allow_html=True
-# )
 
 
 # Add a button to upload the reference sheet
-uploaded_reference = st.file_uploader("Upload Reference Sheet ('.jpg', '.png', '.jpeg')", type=["jpg", "png", "jpeg"], key="reference")
+uploaded_reference = st.file_uploader("Upload Reference Sheet ", type=["jpg", "png", "jpeg"], key="reference")
 
 # Add a button to upload the student sheet
-uploaded_student = st.file_uploader("Upload Student Sheet ('.jpg', '.png', '.jpeg')", accept_multiple_files=True, key="student")
+uploaded_student = st.file_uploader("Upload Student Sheets", type=["jpg", "png", "jpeg"],accept_multiple_files=True, key="student")
 
 # Process the reference and student sheets if uploaded
 if uploaded_reference and uploaded_student:
@@ -90,6 +81,7 @@ if uploaded_reference and uploaded_student:
             st.session_state['reference_answers'] = reference_answers
             os.remove(reference_path)
 
+        
             for student_file in uploaded_student:
                 with tempfile.NamedTemporaryFile(delete=False) as temp_student:
                     temp_student.write(student_file.read())
@@ -143,3 +135,29 @@ if 'all_results' in st.session_state:
 #     # Add a back arrow button to return to the home page
 #     if st.button("⬅️ Back"):
 #         st.set_page_config(page_title="Test Scoring System", layout="wide")
+# Create a function for each menu option
+# def option1():
+#     st.write("This is Option 1")
+
+# def option2():
+#     st.write("This is Option 2")
+
+# def option3():
+#     st.write("This is Option 3")
+
+# # Create the menu in the sidebar
+# menu_selection = st.sidebar.button("Graded sheets")
+
+# # Call the corresponding function based on the selected option
+# if menu_selection == "Option 1":
+#     option1()
+# elif menu_selection == "Option 2":
+#     option2()
+# elif menu_selection == "Option 3":
+#     option3()
+
+
+
+
+
+
