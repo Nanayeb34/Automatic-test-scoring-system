@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import time
 import random
 import string
-from io import BytesIO
+import io
 import streamlit as st
 
 def create_temp_folder():
@@ -89,7 +89,9 @@ def preprocess_image(image_path):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     equalized = clahe.apply(median)
     
-    return reference,equalized
+    
+    return reference, equalized
+
 
 def index_preprocess(image_path):
     reference=cv2.imread(image_path)
@@ -194,8 +196,8 @@ def filter_index_contours(index_sorted_contours,normalized,index_rgb):
                 if epsilon >100:
                     roi = normalized[y:y+h, x:x+w]
                     avg_intensity = np.mean(roi)
-                    min_intensity_thresh = 150
-                    max_intensity_thresh=200
+                    min_intensity_thresh = 100
+                    max_intensity_thresh=280
                     if min_intensity_thresh < avg_intensity < max_intensity_thresh and 1.5 <= w / h <= 2.5:
                             cv2.rectangle(index_rgb, (x, y), (x+w, y+h), (0, 255, 0), 5)
                             if 150<y<190:
@@ -221,58 +223,57 @@ def filter_index_contours(index_sorted_contours,normalized,index_rgb):
     
     # Convert the list of integers to a single integer
     # index_numbers = int(''.join(map(str, index_numbers)))  
-    index_numbers = int(''.join(map(str, index_numbers))) 
+    index_numbers = int(''.join(index_numbers))
     # if len(str(index_numbers)) != 7:
     #     # unique_key = f'index_{id(index_numbers)}'
-    #     index_numbers = show_warning_and_get_input(reference, index_numbers)
+        # index_numbers = show_warning_and_get_input(reference, index_numbers)
     # print(index_numbers)
     return index_numbers 
 
 
-def show_warning_and_get_input(reference, index_numbers):
-    if len(str(index_numbers)) != 7:
-        st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
-        # Convert the reference image to BytesIO and open it using PIL
-        # Display the reference image using matplotlib
-        plt.imshow(reference)
-        plt.axis('off')  # Hide axes
-        st.pyplot()
-        # st.image(img, use_column_width=True, caption="Uploaded Image")
-
-        # Display current index numbers
-        st.write(f"Current index numbers: {index_numbers}")
-
-        # Get user input for the corrected index number
-        corrected_index = st.number_input(
-            "Enter correct index number (7 digits):",
-            value=index_numbers,
-            format='%d',
-            key="corrected_index"  # Using a key to track the session state of corrected_index
-        )
-
-        if "corrected_index" in st.session_state:
-            try:
-                corrected_index = int(corrected_index)
-                if len(str(corrected_index)) != 7:
-                    st.warning("Invalid index number entered. Keeping the original index number.")
-                else:
-                    st.write("Index number updated successfully.", "✅")
-                    st.session_state.corrected_index = corrected_index  # Store in session state
-            except ValueError:
-                st.warning("Invalid input. Keeping the original index number.")
-        return corrected_index
-    else:
-        return index_numbers
+def show_warning_and_get_input(image_path, index_numbers,student_id):
+    if f"corrected_index_input_{student_id}" not in st.session_state:
+        st.session_state[f"corrected_index_input_{student_id}"]=[]
+        if len(str(index_numbers)) != 7:
+            st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
+            
+            # Display the reference image using matplotlib
+            pil_image=Image.open(image_path)
+            st.image(pil_image, use_column_width=True, caption="Uploaded Image")
 
 
+            # Get user input for the corrected index number
+            corrected_index = st.text_input(
+                "Enter correct index number (7 digits):",
+                value=index_numbers,
+                # key=f"corrected_index_input_{student_id}"   # Using a key to track the session state of corrected_index
+            )
+            
 
-
-
-
-
-
-
-
+            if corrected_index:
+                st.session_state[f"corrected_index_input_{student_id}"]=corrected_index
+                return st.session_state[f"corrected_index_input_{student_id}"]
+        
+    # Return the original index numbers if no correction is made
+    # return index_numbers
+        
+    #         st.write("User entered corrected index:", corrected_index)
+    #         return corrected_index
+    # #         try:
+    # #             corrected_index = int(corrected_index)
+    # #             if len(str(corrected_index)) != 7:
+    # #                 st.warning("Invalid index number entered. Keeping the original index number.")
+    # #             else:
+    # #                 st.write("Index number updated successfully.", "✅")
+    # #                 st.session_state.corrected_index = corrected_index  # Store in session state
+    # #         except ValueError:
+    # #             st.warning("Invalid input. Keeping the original index number.")
+        
+    # #     # Always return the corrected_index after processing
+    # #         return corrected_index
+    # else:
+    #     st.write("Index numbers are already 7 digits long:", index_numbers)
+    # return corrected_index
 
 
 
@@ -313,31 +314,27 @@ def process_contour(x, y, w, h, index, reference, student_answers, answer_contou
             cv2.rectangle(reference, (x, y), (x+w, y+h), (0, 255, 0), 5)
 def student_sheet(image_path):
 
-    reference,equalized= preprocess_image(image_path)
-    median=index_preprocess(image_path)
+    reference, equalized = preprocess_image(image_path)
+    median = index_preprocess(image_path)
     normalized = normalize_brightness(equalized)
     opened_image = remove_noise(normalized)
-    contours,index_contours,adap_thresh = find_contours(opened_image,median)
-    index_sorted_contours,index_rgb=sort_index_contours(index_contours,adap_thresh,reference)
-    index_numbers=filter_index_contours(index_sorted_contours,normalized,index_rgb)
-    new_index_numbers=show_warning_and_get_input(index_numbers,reference)
-    largest_contour=find_largest_contour(contours)
-    filtered_contours=filter_contours(contours,largest_contour,normalized)
+    contours, index_contours, adap_thresh = find_contours(opened_image, median)
+    index_sorted_contours, index_rgb = sort_index_contours(index_contours, adap_thresh, reference)
+    index_numbers = filter_index_contours(index_sorted_contours, normalized, index_rgb)
+    # new_index_numbers = show_warning_and_get_input(reference, index_numbers,student_id)
+    largest_contour = find_largest_contour(contours)
+    filtered_contours = filter_contours(contours, largest_contour, normalized)
     concatenated_contours = group_contours(filtered_contours)
 
     student_answers = []
-    answer_contours=[]
+    answer_contours = []
     # Iterate over the contours
     for index, contour in enumerate(concatenated_contours):
         [x, y, w, h] = cv2.boundingRect(contour)
-        process_contour(x, y, w, h, index, reference, student_answers,answer_contours)
-    # cv2.imwrite('sheet.jpg',reference)
-    # Convert the NumPy array to a PIL image
-    reference_image = Image.fromarray(reference)
-        # Save the processed reference image to a temporary file and get its path
-    # with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-    #     reference_image.save(temp_file.name)
-    return new_index_numbers,student_answers,reference_image,answer_contours
+        process_contour(x, y, w, h, index, reference, student_answers, answer_contours)
+
+    return index_numbers, student_answers, reference, answer_contours
+
 
 def reference_sheet(image_path):
 
@@ -381,13 +378,14 @@ def score(reference_answers, all_results):
             else:
                 cv2.rectangle(reference, (answer_contours[i][0], answer_contours[i][1]), (answer_contours[i][0] + answer_contours[i][2], answer_contours[i][1] + answer_contours[i][3]), (255, 0, 0), 2)
 
-        index_numbers = all_results[i]['index_numbers']
+        new_index_numbers = all_results[i]['index_numbers']
         scores = score  # The corrected score value for this iteration
 
         # Append the data for this iteration to the list
-        data.append({'Index No': index_numbers, 'Score': scores})
+        data.append({'Index No': new_index_numbers, 'Score': scores})
 
     # Create a DataFrame from the collected data
     df = pd.DataFrame(data)
+
     return df
 
