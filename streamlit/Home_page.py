@@ -80,26 +80,26 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-def show_warning_and_get_input(index_numbers,student_id):
-    if f"corrected_index_input_{student_id}" not in st.session_state:
-        st.session_state[f"corrected_index_input_{student_id}"]=[]
-    if len(str(index_numbers)) != 7:
-        st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
+# def show_warning_and_get_input(index_numbers,student_id):
+#     if f"corrected_index_input_{student_id}" not in st.session_state:
+#         st.session_state[f"corrected_index_input_{student_id}"]=[]
+#     if len(str(index_numbers)) != 7:
+#         st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
         
-        # Display the reference image using matplotlib
-        # pil_image=Image.open(image_path)
-        # st.image(pil_image, use_column_width=True, caption="Uploaded Image")
+#         # Display the reference image using matplotlib
+#         # pil_image=Image.open(image_path)
+#         # st.image(pil_image, use_column_width=True, caption="Uploaded Image")
 
-        # Display current index numbers
-        # st.write(f"Current index numbers: {index_numbers}")
-        # stored_corrected_index = st.session_state.get(f"stored_corrected_index_{student_id}")
-        # Get user input for the corrected index number
-        corrected_index = st.text_input(
-            "Enter correct index number (7 digits):",
-            value=index_numbers
-            # format='%d',
-            # key=f"corrected_index_input_{student_id}"   # Using a key to track the session state of corrected_index
-        )
+#         # Display current index numbers
+#         # st.write(f"Current index numbers: {index_numbers}")
+#         # stored_corrected_index = st.session_state.get(f"stored_corrected_index_{student_id}")
+#         # Get user input for the corrected index number
+#         corrected_index = st.text_input(
+#             "Enter correct index number (7 digits):",
+#             value=index_numbers
+#             # format='%d',
+#             # key=f"corrected_index_input_{student_id}"   # Using a key to track the session state of corrected_index
+#         )
         
         # Store the new value in a separate session state variable
         # st.session_state[f"stored_corrected_index_{student_id}"] = corrected_index
@@ -107,11 +107,11 @@ def show_warning_and_get_input(index_numbers,student_id):
         # if corrected_index:
         #     st.session_state[f"corrected_index_input_{student_id}"]=new_results
             # return corrected_index
-        if f"corrected_index_input_{student_id}" in st.session_state:
-            return corrected_index
-hi=show_warning_and_get_input(index_numbers=4567,student_id=789)
-st.write(hi)
-# def trial():
+#         if f"corrected_index_input_{student_id}" in st.session_state:
+#             return corrected_index
+# hi=show_warning_and_get_input(index_numbers=4567,student_id=789)
+# st.write(hi)
+# # def trial():
 # corrected_index = st.text_input(
 #     "Enter correct index number (7 digits):",
 #     value=234,
@@ -123,7 +123,7 @@ st.write(hi)
 # returned_value=trial()
 # st.write("Returned value:", returned_value)
 # Configure logging to display debug messages
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 # Provide the path to the image
 # image_path = r'C:\Users\Sam\AppData\Local\Temp\tmpp9xb9m8s.jpg'
