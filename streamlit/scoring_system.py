@@ -13,6 +13,7 @@ import string
 import io
 import streamlit as st
 
+
 def create_temp_folder():
     temp_dir = 'scanned_sheets'
     os.makedirs(temp_dir, exist_ok=True)
@@ -231,50 +232,15 @@ def filter_index_contours(index_sorted_contours,normalized,index_rgb):
     return index_numbers 
 
 
-def show_warning_and_get_input(image_path, index_numbers,student_id):
-    if f"corrected_index_input_{student_id}" not in st.session_state:
-        st.session_state[f"corrected_index_input_{student_id}"]=[]
-        if len(str(index_numbers)) != 7:
-            st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
-            
-            # Display the reference image using matplotlib
-            pil_image=Image.open(image_path)
-            st.image(pil_image, use_column_width=True, caption="Uploaded Image")
-
-
-            # Get user input for the corrected index number
-            corrected_index = st.text_input(
-                "Enter correct index number (7 digits):",
-                value=index_numbers,
-                # key=f"corrected_index_input_{student_id}"   # Using a key to track the session state of corrected_index
-            )
-            
-
-            if corrected_index:
-                st.session_state[f"corrected_index_input_{student_id}"]=corrected_index
-                return st.session_state[f"corrected_index_input_{student_id}"]
+def show_warning_and_get_input(image_path, index_numbers):
+    # if f"corrected_index_input_{student_id}" not in st.session_state:
+    #     st.session_state[f"corrected_index_input_{student_id}"]=[]
+    if len(str(index_numbers)) != 7:
+        st.warning("Number of index numbers is not equal to 7.", icon="⚠️")
         
-    # Return the original index numbers if no correction is made
-    # return index_numbers
-        
-    #         st.write("User entered corrected index:", corrected_index)
-    #         return corrected_index
-    # #         try:
-    # #             corrected_index = int(corrected_index)
-    # #             if len(str(corrected_index)) != 7:
-    # #                 st.warning("Invalid index number entered. Keeping the original index number.")
-    # #             else:
-    # #                 st.write("Index number updated successfully.", "✅")
-    # #                 st.session_state.corrected_index = corrected_index  # Store in session state
-    # #         except ValueError:
-    # #             st.warning("Invalid input. Keeping the original index number.")
-        
-    # #     # Always return the corrected_index after processing
-    # #         return corrected_index
-    # else:
-    #     st.write("Index numbers are already 7 digits long:", index_numbers)
-    # return corrected_index
-
+        # Display the reference image using matplotlib
+        # pil_image=Image.open(image_path)
+        # st.image(pil_image, use_column_width=True, caption="Uploaded Image")
 
 
 def group_contours(contours):
@@ -313,7 +279,6 @@ def process_contour(x, y, w, h, index, reference, student_answers, answer_contou
         else:
             cv2.rectangle(reference, (x, y), (x+w, y+h), (0, 255, 0), 5)
 def student_sheet(image_path):
-
     reference, equalized = preprocess_image(image_path)
     median = index_preprocess(image_path)
     normalized = normalize_brightness(equalized)
@@ -321,23 +286,20 @@ def student_sheet(image_path):
     contours, index_contours, adap_thresh = find_contours(opened_image, median)
     index_sorted_contours, index_rgb = sort_index_contours(index_contours, adap_thresh, reference)
     index_numbers = filter_index_contours(index_sorted_contours, normalized, index_rgb)
-    # new_index_numbers = show_warning_and_get_input(reference, index_numbers,student_id)
     largest_contour = find_largest_contour(contours)
     filtered_contours = filter_contours(contours, largest_contour, normalized)
     concatenated_contours = group_contours(filtered_contours)
-
     student_answers = []
     answer_contours = []
-    # Iterate over the contours
     for index, contour in enumerate(concatenated_contours):
         [x, y, w, h] = cv2.boundingRect(contour)
         process_contour(x, y, w, h, index, reference, student_answers, answer_contours)
-
     return index_numbers, student_answers, reference, answer_contours
 
 
-def reference_sheet(image_path):
 
+
+def reference_sheet(image_path):
     reference, equalized = preprocess_image(image_path)
     normalized = normalize_brightness(equalized)
     opened_image = remove_noise(normalized)
@@ -345,10 +307,7 @@ def reference_sheet(image_path):
     largest_contour=find_largest_contour(contours)
     filtered_contours=filter_contours(contours,largest_contour,normalized)
     concatenated_contours = group_contours(filtered_contours)
-
     reference_answers = []
-
-    # Iterate over the contours
     for index, contour in enumerate(concatenated_contours):
         [x, y, w, h] = cv2.boundingRect(contour)
         process_contour(x,y,w,h, index, reference, reference_answers)
@@ -358,7 +317,7 @@ def reference_sheet(image_path):
 
 
 
-def score(reference_answers, all_results):
+def score(reference_answers, all_results,total_questions):
     data = []  # List to hold the data for the DataFrame
 
     for i, result in enumerate(all_results):
@@ -382,7 +341,7 @@ def score(reference_answers, all_results):
         scores = score  # The corrected score value for this iteration
 
         # Append the data for this iteration to the list
-        data.append({'Index No': new_index_numbers, 'Score': scores})
+        data.append({'Index No': new_index_numbers, 'Score': f"{scores}/{total_questions}"})
 
     # Create a DataFrame from the collected data
     df = pd.DataFrame(data)
