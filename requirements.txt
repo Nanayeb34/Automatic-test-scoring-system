@@ -1,0 +1,8 @@
+pywin32
+streamlit
+pandas
+tempfile
+os
+PIL
+time
+
