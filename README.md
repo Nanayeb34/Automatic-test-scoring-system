@@ -2,7 +2,7 @@
 This is a test scoring system for scoring Multiple-choice Questions (MCQs) exams in Kwame Nkrumah University of Science and Technology
 
 # Installation
-It is advised you create a virtual environment before you install the repository
+It is advised you create a virtual environment with python 3.8.16 before you install the repository
 
 ```bash
 git clone git@github.com:Nanayeb34/Automatic-test-scoring-system.git
