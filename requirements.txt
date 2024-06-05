@@ -1,8 +1,5 @@
-pywin32
-streamlit
-pandas
-tempfile
-os
-PIL
-time
+pywin32==306
+streamlit==1.23.1
+pandas==2.0.2
+opencv-python==4.6.0.66
 
